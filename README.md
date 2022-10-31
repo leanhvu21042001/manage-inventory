@@ -52,11 +52,11 @@ yarn
 ```bash
 sls deploy
 ```
-
+  
 ## Example
 - Create an inventory
 
-  - Endpoint: /inventory
+  - Endpoint: `https://d7fxawlvth.execute-api.ap-southeast-1.amazonaws.com/inventory`
   - Method: POST
   - Body:
 ``` json
@@ -74,7 +74,7 @@ sls deploy
 
 - Discount
 
-  - Endpoint: /inventory-discount
+  - Endpoint: `https://d7fxawlvth.execute-api.ap-southeast-1.amazonaws.com/inventory-discount`
   - Method: PUT
   - Body:
 ```json
@@ -87,15 +87,15 @@ sls deploy
 
 - Get One Inventory
 
-  - Endpoint: /inventory/{inventory_id}
+  - Endpoint: `https://d7fxawlvth.execute-api.ap-southeast-1.amazonaws.com/inventory/{inventory_id}`
   - Method: GET
   - Example: inventory/3110a50a-d880-442c-ac03-27544a1de558
 
 - Get list Inventories
 
-  - Endpoint: /inventories
+  - Endpoint: `https://d7fxawlvth.execute-api.ap-southeast-1.amazonaws.com/inventories`
   - Method: GET
-
+  
 ## Licence
 
 MIT.
