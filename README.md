@@ -48,6 +48,54 @@ or:
 yarn
 ```
 
+## Deploy
+```bash
+sls deploy
+```
+
+## Example
+- Create an inventory
+
+  - Endpoint: /inventory
+  - Method: POST
+  - Body:
+``` json
+{
+  "name": "Inventory",
+  "category": "Category1",
+  "price": 11000,
+  "current_stock": "21",
+  "supplier": {
+      "name": "Raymond",
+      "description": "Raymod provider"
+  }
+}
+```
+
+- Discount
+
+  - Endpoint: /inventory-discount
+  - Method: PUT
+  - Body:
+```json
+{
+  "discount": 1111111111111,
+  "category": "Category1"
+}
+```
+
+
+- Get One Inventory
+
+  - Endpoint: /inventory/{inventory_id}
+  - Method: GET
+  - Example: inventory/3110a50a-d880-442c-ac03-27544a1de558
+
+- Get list Inventories
+
+  - Endpoint: /inventories
+  - Method: GET
+
 ## Licence
 
 MIT.
