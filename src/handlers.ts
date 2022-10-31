@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { AttributeValue, ExecuteStatementCommand } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, ExecuteStatementCommand, ScanOutput } from "@aws-sdk/client-dynamodb";
 
 import { v4 } from "uuid";
 import * as yup from "yup";
@@ -9,7 +9,7 @@ import { docClient } from "./doc-client";
 import { responseData } from "./response-data";
 import { schemaInventory } from "./yup-schema";
 import { HTTP_STATUS_CODE } from "./http-status-code";
-import { ddbDocClient, tableName } from "./dynamodb";
+import { tableName } from "./dynamodb";
 
 const handleError = (e: unknown) => {
   if (e instanceof yup.ValidationError) {
@@ -50,6 +50,52 @@ const fetchInventoryById = async (id: string) => {
   }
 
   return output.Item;
+};
+
+const updatesInventories = async (inventories: [], price: number) => {
+  const updates: Promise<any>[] =
+    inventories?.map(({ inventoryId }) =>
+      docClient
+        .update({
+          TableName: tableName,
+          Key: { inventoryId },
+          UpdateExpression: "SET #price = :price",
+          ExpressionAttributeValues: {
+            ":price": price,
+          },
+          ExpressionAttributeNames: {
+            "#price": "price",
+          },
+        })
+        .promise(),
+    ) || [];
+
+  await Promise.all(updates);
+};
+
+const getAllInventories = async () => {
+  const { Items: inventories } = await docClient
+    .scan({
+      TableName: tableName,
+    })
+    .promise();
+
+  return inventories;
+};
+
+const getInventoriesByCategory = async (category: string) => {
+  const { Items: inventories } = await docClient
+    .scan({
+      TableName: tableName,
+      FilterExpression: "#category = :category",
+      ExpressionAttributeNames: {
+        "#category": "category",
+      },
+      ExpressionAttributeValues: { ":category": category },
+    })
+    .promise();
+
+  return inventories;
 };
 
 export const createInventory = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -95,25 +141,13 @@ export const updateInventory = async (event: APIGatewayProxyEvent): Promise<APIG
       throw new HttpError(HTTP_STATUS_CODE.NOT_FOUND, { error: "Miss field `price`" });
     }
 
-    // update all items equal with category
-    if (category) {
-      const params = {
-        Statement: `UPDATE ${tableName} SET price=? WHERE category=?`,
-        Parameters: [{ N: price }, { S: category }],
-      };
-      const { Items: inventories } = await ddbDocClient.send(new ExecuteStatementCommand(params));
+    const inventories = category ? await getInventoriesByCategory(category) : await getAllInventories();
 
-      return responseData(HTTP_STATUS_CODE.OK, JSON.stringify(inventories));
+    if (inventories) {
+      await updatesInventories(inventories, price);
     }
 
-    const params = {
-      Statement: `UPDATE ${tableName} SET price=?`,
-      Parameters: [{ N: price }],
-    };
-
-    const { Items: inventories } = await ddbDocClient.send(new ExecuteStatementCommand(params));
-
-    return responseData(HTTP_STATUS_CODE.OK, JSON.stringify(inventories));
+    return responseData(HTTP_STATUS_CODE.OK, JSON.stringify({ inventories }));
   } catch (e) {
     return handleError(e);
   }
