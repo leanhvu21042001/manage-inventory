@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { ExecuteStatementCommand } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, ExecuteStatementCommand } from "@aws-sdk/client-dynamodb";
 
 import { v4 } from "uuid";
 import * as yup from "yup";
@@ -119,14 +119,31 @@ export const updateInventory = async (event: APIGatewayProxyEvent): Promise<APIG
   }
 };
 
-export const listInventory = async (_event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  let limit = 10;
-  const { Items: inventories } = await docClient
-    .scan({
-      TableName: tableName,
-      Limit: limit,
-    })
-    .promise();
+export const listInventory = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  const query = event.queryStringParameters;
 
-  return responseData(HTTP_STATUS_CODE.OK, JSON.stringify(inventories));
+  const limit = query?.limit ? Number(query.limit) : 10;
+
+  const params: {
+    Limit?: number;
+    TableName?: string;
+    ExclusiveStartKey?: { [key: string]: AttributeValue };
+  } = {
+    TableName: tableName,
+    Limit: limit,
+  };
+
+  if (query?.last_key) {
+    params.ExclusiveStartKey = { inventoryId: query.last_key };
+  }
+
+  const { Items: inventories, LastEvaluatedKey } = await docClient.scan(params).promise();
+
+  return responseData(
+    HTTP_STATUS_CODE.OK,
+    JSON.stringify({
+      inventories,
+      LastEvaluatedKey,
+    }),
+  );
 };
