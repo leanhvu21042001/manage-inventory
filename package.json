@@ -10,8 +10,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
     "@types/aws-lambda": "^8.10.102",
     "@types/node": "^18.7.13",
+    "husky": "^8.0.1",
     "prettier": "^2.7.1",
     "serverless": "^3.22.0",
     "serverless-plugin-typescript": "^2.1.2",
