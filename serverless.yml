@@ -1,0 +1,68 @@
+service: assignment
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: ap-southeast-1
+  lambdaHashingVersion: 20201221
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:PartiQLInsert
+        - dynamodb:PartiQLUpdate
+        - dynamodb:PartiQLDelete
+        - dynamodb:PartiQLSelect
+      Resource:
+        - Fn::GetAtt: [InventoryTable, Arn]
+functions:
+  createInventory:
+    handler: src/handlers.createInventory
+    events:
+      - httpApi:
+          path: /inventory
+          method: post
+  updateInventory:
+    handler: src/handlers.updateInventory
+    events:
+      - httpApi:
+          path: /inventory-discount
+          method: put
+  getInventory:
+    handler: src/handlers.getInventory
+    events:
+      - httpApi:
+          path: /inventory/{id}
+          method: get
+  listInventory:
+    handler: src/handlers.listInventory
+    events:
+      - httpApi:
+          path: /inventories
+          method: get
+
+plugins:
+  - serverless-plugin-typescript
+
+resources:
+  Resources:
+    InventoryTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: InventoryTable
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        AttributeDefinitions:
+          - AttributeName: inventoryId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: inventoryId
+            KeyType: HASH
