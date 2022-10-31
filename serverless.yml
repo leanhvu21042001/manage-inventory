@@ -10,12 +10,6 @@ provider:
   iamRoleStatements:
     - Effect: Allow
       Action:
-        # - dynamodb:Query
-        # - dynamodb:Scan
-        # - dynamodb:GetItem
-        # - dynamodb:PutItem
-        # - dynamodb:UpdateItem
-        # - dynamodb:DeleteItem
         - dynamodb:PartiQLInsert
         - dynamodb:PartiQLUpdate
         - dynamodb:PartiQLDelete
@@ -35,25 +29,25 @@ provider:
         - Fn::GetAtt: [InventoryTable, Arn]
 functions:
   createInventory:
-    handler: src/handlers.createInventory
+    handler: src/api/inventory/handlers.createInventory
     events:
       - httpApi:
           path: /inventory
           method: post
   updateInventory:
-    handler: src/handlers.updateInventory
+    handler: src/api/inventory/handlers.discountInventories
     events:
       - httpApi:
           path: /inventory-discount
           method: put
   getInventory:
-    handler: src/handlers.getInventory
+    handler: src/api/inventory/handlers.getInventory
     events:
       - httpApi:
           path: /inventory/{id}
           method: get
   listInventory:
-    handler: src/handlers.listInventory
+    handler: src/api/inventory/handlers.listInventory
     events:
       - httpApi:
           path: /inventories
